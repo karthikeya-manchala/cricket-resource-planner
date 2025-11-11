@@ -1,0 +1,1419 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>T20 Bowling Resource Visualizer</title>
+  <style>
+    :root {
+      --bg: #f6f3ed;
+      --card-bg: #ffffff;
+      --accent: #115e59;
+      --accent-soft: #cffafe;
+      --border-soft: #e5e7eb;
+      --text-main: #111827;
+      --text-muted: #6b7280;
+      --illegal: #b91c1c;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      margin: 20px 0 6px;
+      font-size: 1.8rem;
+      text-align: center;
+    }
+
+    p.subtitle {
+      margin: 0 0 20px;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    .page {
+      max-width: 1100px;
+      width: 100%;
+      padding: 0 16px 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 14px;
+      padding: 12px 14px 14px;
+      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.06);
+      border: 1px solid var(--border-soft);
+    }
+
+    .card h2 {
+      margin: 0 0 6px;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .card small {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--text-muted);
+      font-size: 0.78rem;
+    }
+
+    .card-left {
+      flex: 1 1 240px;
+    }
+
+    .card-right {
+      flex: 2 1 360px;
+    }
+
+    .col-bowling {
+      flex: 2 1 520px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .batting-card {
+      flex: 1 1 260px;
+      align-self: flex-start;
+    }
+
+    .bowler-input-row {
+      display: flex;
+      gap: 6px;
+      margin-top: 6px;
+      flex-wrap: wrap;
+    }
+
+    .bowler-input-row input {
+      flex: 2 1 140px;
+      padding: 6px 8px;
+      border-radius: 8px;
+      border: 1px solid var(--border-soft);
+      font-size: 0.85rem;
+    }
+
+    .bowler-input-row select {
+      flex: 1 1 90px;
+      padding: 6px 8px;
+      border-radius: 8px;
+      border: 1px solid var(--border-soft);
+      font-size: 0.78rem;
+      background: #f9fafb;
+    }
+
+    button {
+      cursor: pointer;
+      border-radius: 999px;
+      border: none;
+      padding: 6px 10px;
+      font-size: 0.8rem;
+      background: var(--accent);
+      color: #ecfeff;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+
+.button-secondary {
+  background: #f9fafb;
+  color: #111827;
+  border: 1px solid #d1d5db;
+  padding-inline: 8px;
+  font-size: 0.75rem;
+}
+
+.button-secondary:hover {
+  background: #e5e7eb;
+}
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+
+    .bowler-pill-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .bowler-pill {
+      padding: 3px 7px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      border: 1px solid var(--border-soft);
+      background: #f9fafb;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .bowler-color-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      flex-shrink: 0;
+    }
+
+    .bowler-pill span.name {
+      max-width: 130px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .bowler-pill button {
+      background: transparent;
+      color: var(--text-muted);
+      padding: 0;
+      border-radius: 999px;
+      width: 16px;
+      height: 16px;
+      justify-content: center;
+      font-size: 0.7rem;
+    }
+
+    .bowler-pill button:hover {
+      background: rgba(0,0,0,0.04);
+      color: var(--illegal);
+    }
+
+    /* Current over control */
+
+    .current-over-row {
+      margin-top: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      flex-wrap: wrap;
+    }
+
+    .current-over-row label {
+      font-weight: 500;
+    }
+
+    .current-over-row input[type="range"] {
+      flex: 1 1 140px;
+    }
+
+    .current-over-value {
+      font-weight: 600;
+      color: var(--text-main);
+      min-width: 52px;
+    }
+
+    /* Overs dropdown section */
+
+    #oversRow {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .overs-section-label {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+      font-weight: 600;
+    }
+
+    .overs-row-group {
+      display: flex;
+      gap: 6px;
+      margin-top: 3px;
+      flex-wrap: nowrap;
+    }
+
+    .over-cell {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      font-size: 0.75rem;
+      width: 80px;
+      flex: 0 0 80px;
+    }
+
+    .over-label {
+      text-align: center;
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 0.8rem;
+    }
+
+    .over-cell select {
+      width: 100%;
+      padding: 4px 6px;
+      border-radius: 8px;
+      border: 1px solid var(--border-soft);
+      font-size: 0.78rem;
+      background: #f9fafb;
+    }
+
+    .over-cell select.illegal {
+      border-color: var(--illegal);
+      background: #fef2f2;
+      color: var(--illegal);
+    }
+
+    .over-cell.completed select {
+      background: #f3f4f6;
+      color: #4b5563;
+      border-style: dashed;
+    }
+
+    .over-cell.completed .over-label {
+      color: #9ca3af;
+    }
+
+    /* Timeline */
+
+    .timeline-container {
+      margin-top: 10px;
+    }
+
+    .timeline-section-label {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      margin-top: 4px;
+      margin-bottom: -2px;
+    }
+
+    .timeline-bar {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .timeline-bar-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: nowrap;
+      padding: 2px 0;
+    }
+
+    .timeline-over {
+      border-radius: 9px;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      background: #f9fafb;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: flex-start;
+      width: 90px;
+      flex: 0 0 90px;
+      min-height: 70px;
+      padding: 4px 5px 5px;
+      box-sizing: border-box;
+      transition: opacity 0.15s ease, transform 0.15s ease, border-color 0.15s ease;
+    }
+
+    .timeline-over-strip {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 5px;
+      background: #e5e7eb;
+    }
+
+    .timeline-over-index {
+      margin-top: 8px; /* below the strip */
+      font-size: 0.88rem;
+      font-weight: 700;
+      align-self: flex-start;
+      padding-left: 1px;
+      color: #0f172a;
+      text-shadow: 0 1px 2px rgba(255, 255, 255, 0.7);
+      z-index: 1;
+    }
+
+    .timeline-over-bowler {
+      margin-top: 4px;
+      font-size: 0.78rem;
+      text-align: center;
+      white-space: normal;
+      word-break: break-word;
+      line-height: 1.2;
+      padding: 1px 1px 0;
+      color: #111827;
+    }
+
+    .timeline-over.illegal {
+      outline: 2px solid var(--illegal);
+      outline-offset: 1px;
+    }
+
+    .timeline-over.future {
+      opacity: 0.45;
+    }
+
+    .timeline-over.completed {
+      opacity: 1;
+    }
+
+    .timeline-over.droppable {
+      border-color: var(--accent);
+    }
+
+    .timeline-over.droppable-hover {
+      border-color: var(--accent);
+      transform: translateY(-1px);
+    }
+
+    .timeline-over-clear {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      font-size: 0.65rem;
+      padding: 0 4px;
+      border-radius: 999px;
+      border: 1px solid #e5e7eb;
+      background: rgba(249, 250, 251, 0.95);
+      color: #6b7280;
+      cursor: pointer;
+      z-index: 2;
+      line-height: 1.2;
+    }
+
+    .timeline-over-clear:hover {
+      color: #b91c1c;
+      border-color: #fecaca;
+      background: #fef2f2;
+    }
+
+    .timeline-hypo-note {
+      margin-top: 6px;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    /* Bowler stats table */
+
+    .bowler-table {
+      border-collapse: collapse;
+      margin-top: 8px;
+      font-size: 0.8rem;
+      width: auto;
+      min-width: 260px;
+    }
+
+    .bowler-table th,
+    .bowler-table td {
+      text-align: left;
+      padding: 4px 8px;
+      border-bottom: 1px solid #f3f4f6;
+      white-space: nowrap;
+    }
+
+    .bowler-table th {
+      font-weight: 500;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+    }
+
+    .bowler-table td:nth-child(3) {
+      text-align: right;
+    }
+
+    .bowler-name-cell {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .bowler-tokens {
+      display: flex;
+      gap: 4px;
+      justify-content: flex-start;
+    }
+
+    .bowler-token {
+      width: 12px;
+      height: 12px;
+      border-radius: 999px;
+      cursor: grab;
+      border: 1px solid rgba(15, 23, 42, 0.35);
+    }
+
+    .bowler-token:active {
+      cursor: grabbing;
+    }
+
+    .illegal-text {
+      color: var(--illegal);
+      font-weight: 500;
+      font-size: 0.75rem;
+    }
+
+    .empty-state {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    /* Batting card */
+
+    .batting-input-row {
+      display: flex;
+      gap: 6px;
+      margin-top: 6px;
+      flex-wrap: wrap;
+    }
+
+    .batting-input-row input {
+      flex: 2 1 140px;
+      padding: 6px 8px;
+      border-radius: 8px;
+      border: 1px solid var(--border-soft);
+      font-size: 0.85rem;
+    }
+
+    .batting-input-row select {
+      flex: 1 1 80px;
+      padding: 6px 8px;
+      border-radius: 8px;
+      border: 1px solid var(--border-soft);
+      font-size: 0.78rem;
+      background: #f9fafb;
+    }
+
+    .current-batters {
+      margin-top: 8px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      font-size: 0.75rem;
+    }
+
+    .current-batter-chip {
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: #ecfdf5;
+      border: 1px solid #bbf7d0;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .current-batter-label {
+      font-weight: 600;
+      color: #166534;
+    }
+
+    .batters-table {
+      border-collapse: collapse;
+      margin-top: 8px;
+      font-size: 0.78rem;
+      width: 100%;
+    }
+
+    .batters-table th,
+    .batters-table td {
+      text-align: left;
+      padding: 4px 6px;
+      border-bottom: 1px solid #f3f4f6;
+      white-space: nowrap;
+    }
+
+    .batters-table th {
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    .batter-name-cell {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .batter-remove {
+      cursor: pointer;
+      font-size: 0.7rem;
+      color: #9ca3af;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      padding: 0 4px;
+    }
+
+    .batter-remove:hover {
+      color: #b91c1c;
+      border-color: #fecaca;
+      background: #fef2f2;
+    }
+
+    .batter-current-flag {
+      font-size: 0.7rem;
+      color: #16a34a;
+      font-weight: 500;
+    }
+
+    @media (max-width: 720px) {
+      .card-left,
+      .card-right,
+      .col-bowling,
+      .batting-card {
+        flex: 1 1 100%;
+      }
+
+      .overs-row-group {
+        flex-wrap: wrap;
+      }
+
+      .over-cell {
+        width: 72px;
+        flex: 0 0 72px;
+      }
+
+      .timeline-bar-row {
+        flex-wrap: wrap;
+      }
+
+      .timeline-over {
+        width: 80px;
+        flex: 0 0 80px;
+        min-height: 70px;
+      }
+    }
+  
+    .batting-card { display: none !important; }
+</style>
+</head>
+<body>
+  <h1>T20 Bowling Resource Visualizer</h1>
+  <p class="subtitle">Assign overs to bowlers and track how many overs each one has left (max 4 per bowler).</p>
+
+  <div class="page">
+    <div class="row">
+      <!-- Left: Bowler management -->
+      <div class="card card-left">
+        <h2>1. Bowlers</h2>
+        <small>Add bowlers for this innings. Each can bowl a maximum of 4 overs.</small>
+
+        <div class="bowler-input-row">
+          <input id="bowlerNameInput" type="text" placeholder="Bowler name (e.g. Bumrah)" />
+          <select id="bowlerTypeInput">
+            <option value="">Type</option>
+            <option value="RAP">RAP</option>
+            <option value="LAP">LAP</option>
+            <option value="SLA">SLA</option>
+            <option value="OS">OS</option>
+            <option value="LS">LS</option>
+            <option value="LWS">LWS</option>
+          </select>
+          <button id="addBowlerBtn" type="button">+ Add</button>
+        </div>
+
+        <div id="bowlerPills" class="bowler-pill-container"></div>
+
+        <p class="empty-state" id="bowlerEmptyHint">
+          Add at least one bowler, then assign overs below.
+        </p>
+      </div>
+
+      <!-- Right: Overs assignment + current over -->
+      <div class="card card-right">
+        <h2>2. Overs 1–20</h2>
+        <small>Assign who bowled each over. Use the current over slider to separate completed vs future overs.</small>
+
+        <div class="current-over-row">
+          <label for="currentOverInput">Current over (end of):</label>
+          <input id="currentOverInput" type="range" min="0" max="20" value="0" />
+          <span class="current-over-value" id="currentOverValue">0.0</span>
+        </div>
+
+        <div id="oversRow"></div>
+      </div>
+    </div>
+
+    <!-- Timeline + Resources + Batting -->
+    <div class="row">
+      <div class="col-bowling">
+        <!-- Timeline -->
+        <div class="card">
+          <h2>3. Timeline overview</h2>
+          <small>Completed overs are solid; future overs are faded based on the current over slider.</small>
+          <button id="downloadCsvBtn" type="button" class="button-secondary">Download timeline CSV</button>
+          <div class="timeline-container">
+            <div id="timelineBar" class="timeline-bar"></div>
+            <div id="hypotheticalNote" class="timeline-hypo-note"></div>
+          </div>
+        </div>
+
+        <!-- Bowler stats -->
+        <div class="card resources-card">
+          <h2>4. Bowling resources</h2>
+          <small>Overs left per bowler. Drag a circle onto a future over card to assign that over.</small>
+          <div id="bowlerStatsContainer"></div>
+        </div>
+      </div>
+
+      <!-- Batting card -->
+      <div class="card batting-card">
+        <h2>Batting</h2>
+        <small>Enter batters and highlight the current pair at the crease.</small>
+
+        <div class="batting-input-row">
+          <input id="batterNameInput" type="text" placeholder="Batter name (e.g. Suryakumar Yadav)" />
+          <select id="batterHandInput">
+            <option value="">Hand</option>
+            <option value="RH">RH</option>
+            <option value="LH">LH</option>
+          </select>
+          <button id="addBatterBtn" type="button">+ Add</button>
+        </div>
+
+        <div id="currentBatters" class="current-batters"></div>
+
+        <div id="battersTableContainer"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- Basic state model ---------------------------------------------------
+
+    const MAX_OVERS_PER_BOWLER = 4;
+    const TOTAL_OVERS = 20;
+
+    let state = {
+      bowlers: [], // { id, name, type, color }
+      overs: Array.from({ length: TOTAL_OVERS }, (_, i) => ({
+        index: i,        // 0-based
+        bowlerId: null,  // null or bowler.id
+      })),
+      currentOver: 0,  // "end of" current over, 0–20
+      batters: [],     // { id, name, hand }
+      currentBatters: { strikerId: null, nonStrikerId: null }
+    };
+
+    let bowlerColorIndex = 0;
+
+    function nextColor() {
+      const hue = (bowlerColorIndex * 47) % 360;
+      bowlerColorIndex += 1;
+      return `hsl(${hue}, 70%, 50%)`;
+    }
+
+    // --- Utilities -----------------------------------------------------------
+
+    function createId() {
+      return "b" + Math.random().toString(36).slice(2, 9);
+    }
+
+    function addBowler(name, type) {
+      const trimmed = name.trim();
+      const typeTrimmed = (type || "").trim();
+      if (!trimmed) return;
+
+      const id = createId();
+      const color = nextColor();
+
+      state.bowlers.push({ id, name: trimmed, type: typeTrimmed, color });
+
+      renderAll();
+    }
+
+    function removeBowler(id) {
+      // Remove bowler from state
+      state.bowlers = state.bowlers.filter(b => b.id !== id);
+      // Clear overs assigned to this bowler
+      state.overs = state.overs.map(o => o.bowlerId === id ? { ...o, bowlerId: null } : o);
+      renderAll();
+    }
+
+    function setOverBowler(overIndex, bowlerId) {
+      state.overs[overIndex] = { ...state.overs[overIndex], bowlerId: bowlerId || null };
+      renderAll();
+    }
+
+    function setCurrentOver(val) {
+      const v = Math.max(0, Math.min(TOTAL_OVERS, Number(val) || 0));
+      state.currentOver = v;
+      const label = document.getElementById("currentOverValue");
+      label.textContent = v.toFixed(1).replace(".0", ".0"); // keep .0 stylistically
+      renderOversRow();
+      renderTimeline();
+    }
+
+    function computeBowlerStats() {
+      const stats = new Map();
+      for (const bowler of state.bowlers) {
+        stats.set(bowler.id, {
+          bowler,
+          oversBowled: 0,
+          oversLeft: MAX_OVERS_PER_BOWLER,
+          isIllegal: false,
+        });
+      }
+
+      for (const over of state.overs) {
+        if (!over.bowlerId) continue;
+        const entry = stats.get(over.bowlerId);
+        if (!entry) continue;
+        entry.oversBowled += 1;
+      }
+
+      for (const entry of stats.values()) {
+        entry.oversLeft = Math.max(0, MAX_OVERS_PER_BOWLER - entry.oversBowled);
+        if (entry.oversBowled > MAX_OVERS_PER_BOWLER) {
+          entry.isIllegal = true;
+        }
+      }
+
+      return stats;
+    }
+
+    // --- Batting utilities ---------------------------------------------------
+
+    function addBatter(name, hand) {
+      const trimmed = name.trim();
+      const handTrimmed = (hand || "").trim();
+      if (!trimmed) return;
+
+      const id = "bt" + Math.random().toString(36).slice(2, 9);
+      state.batters.push({ id, name: trimmed, hand: handTrimmed });
+
+      renderBatters();
+    }
+
+    function removeBatter(id) {
+      state.batters = state.batters.filter(b => b.id !== id);
+      if (state.currentBatters.strikerId === id) {
+        state.currentBatters.strikerId = null;
+      }
+      if (state.currentBatters.nonStrikerId === id) {
+        state.currentBatters.nonStrikerId = null;
+      }
+      renderBatters();
+    }
+
+    function setStriker(id) {
+      state.currentBatters.strikerId = id;
+      if (state.currentBatters.nonStrikerId === id) {
+        state.currentBatters.nonStrikerId = null;
+      }
+      renderBatters();
+    }
+
+    function setNonStriker(id) {
+      state.currentBatters.nonStrikerId = id;
+      if (state.currentBatters.strikerId === id) {
+        state.currentBatters.strikerId = null;
+      }
+      renderBatters();
+    }
+
+    
+
+function csvEscape(value) {
+  if (value === null || value === undefined) return "";
+  const s = String(value);
+  if (/[",\n]/.test(s)) {
+    return '"' + s.replace(/"/g, '""') + '"';
+  }
+  return s;
+}
+
+function downloadTimelineCsv() {
+  const lines = [];
+  lines.push("Over,Bowler");
+  for (let i = 0; i < TOTAL_OVERS; i++) {
+    const over = state.overs[i];
+    const overNum = i + 1;
+    let bowlerName = "";
+    if (over.bowlerId) {
+      const bowler = state.bowlers.find(b => b.id === over.bowlerId);
+      if (bowler) bowlerName = bowler.name;
+    }
+    lines.push(csvEscape(overNum) + "," + csvEscape(bowlerName));
+  }
+  const csvContent = lines.join("\r\n");
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "t20_timeline.csv";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+    // --- Rendering: Overs dropdown rows -------------------------------------
+
+    function renderOversRow() {
+      const container = document.getElementById("oversRow");
+      container.innerHTML = "";
+
+      const stats = computeBowlerStats();
+      const currentOver = state.currentOver;
+
+      function renderRange(start, end, labelText) {
+        const label = document.createElement("div");
+        label.className = "overs-section-label";
+        label.textContent = labelText;
+        container.appendChild(label);
+
+        const rowDiv = document.createElement("div");
+        rowDiv.className = "overs-row-group";
+
+        for (let i = start; i <= end; i++) {
+          const over = state.overs[i];
+          const isCompleted = i < currentOver;
+
+          const wrapper = document.createElement("div");
+          wrapper.className = "over-cell";
+          if (isCompleted) wrapper.classList.add("completed");
+
+          const overLabel = document.createElement("div");
+          overLabel.className = "over-label";
+          overLabel.textContent = i + 1;
+          wrapper.appendChild(overLabel);
+
+          const select = document.createElement("select");
+
+          // Empty option
+          const emptyOpt = document.createElement("option");
+          emptyOpt.value = "";
+          emptyOpt.textContent = "—";
+          select.appendChild(emptyOpt);
+
+          // Bowler options
+          for (const bowler of state.bowlers) {
+            const opt = document.createElement("option");
+            opt.value = bowler.id;
+            opt.textContent = bowler.name;
+            if (over.bowlerId === bowler.id) opt.selected = true;
+            select.appendChild(opt);
+          }
+
+          select.addEventListener("change", (e) => {
+            const value = e.target.value || null;
+            setOverBowler(i, value);
+          });
+
+          // If this over is assigned to a bowler who is currently illegal, flag it
+          if (over.bowlerId) {
+            const st = stats.get(over.bowlerId);
+            if (st && st.isIllegal) {
+              select.classList.add("illegal");
+            }
+          }
+
+          wrapper.appendChild(select);
+          rowDiv.appendChild(wrapper);
+        }
+
+        container.appendChild(rowDiv);
+      }
+
+      // 1–6, 7–15, 16–20
+      renderRange(0, 5,  "Powerplay (1–6)");
+      renderRange(6, 14, "Middle overs (7–15)");
+      renderRange(15, 19,"Death overs (16–20)");
+    }
+
+    // --- Rendering: Timeline -------------------------------------------------
+
+    function renderTimeline() {
+      const bar = document.getElementById("timelineBar");
+      const hypoNote = document.getElementById("hypotheticalNote");
+      bar.innerHTML = "";
+
+      const stats = computeBowlerStats();
+      const illegalBowlerIds = new Set(
+        Array.from(stats.values())
+          .filter(s => s.isIllegal)
+          .map(s => s.bowler.id)
+      );
+      const currentOver = state.currentOver;
+
+      function renderTimelineRow(start, end, sectionLabel) {
+        const label = document.createElement("div");
+        label.className = "timeline-section-label";
+        label.textContent = sectionLabel;
+        bar.appendChild(label);
+
+        const rowDiv = document.createElement("div");
+        rowDiv.className = "timeline-bar-row";
+
+        for (let i = start; i <= end; i++) {
+          const over = state.overs[i];
+          const div = document.createElement("div");
+          div.className = "timeline-over";
+
+          const isCompleted = i < currentOver;
+
+          let stripColor = "#e5e7eb";
+          let bowlerName = "";
+
+          if (over.bowlerId) {
+            const bowler = state.bowlers.find(b => b.id === over.bowlerId);
+            if (bowler) {
+              stripColor = bowler.color;
+              bowlerName = bowler.name;
+              div.title = `Over ${i + 1}: ${bowler.name}`;
+            }
+          } else {
+            div.title = `Over ${i + 1}: (unassigned)`;
+          }
+
+          if (over.bowlerId && illegalBowlerIds.has(over.bowlerId)) {
+            div.classList.add("illegal");
+          }
+
+          div.classList.add(isCompleted ? "completed" : "future");
+
+          // Droppable only for hypothetical (future) overs
+          if (!isCompleted) {
+            div.classList.add("droppable");
+            div.addEventListener("dragover", (e) => {
+              e.preventDefault();
+            });
+            div.addEventListener("dragenter", (e) => {
+              e.preventDefault();
+              div.classList.add("droppable-hover");
+            });
+            div.addEventListener("dragleave", () => {
+              div.classList.remove("droppable-hover");
+            });
+            div.addEventListener("drop", (e) => {
+              e.preventDefault();
+              div.classList.remove("droppable-hover");
+              const bowlerId = e.dataTransfer.getData("text/plain");
+              if (bowlerId) {
+                setOverBowler(i, bowlerId);
+              }
+            });
+          }
+
+          const strip = document.createElement("div");
+          strip.className = "timeline-over-strip";
+          strip.style.background = stripColor;
+
+          const overIndexSpan = document.createElement("span");
+          overIndexSpan.className = "timeline-over-index";
+          overIndexSpan.textContent = i + 1;
+
+          const nameSpan = document.createElement("span");
+          nameSpan.className = "timeline-over-bowler";
+          nameSpan.textContent = bowlerName;
+
+          // Clear button to remove assigned bowler
+          if (over.bowlerId) {
+            const clearBtn = document.createElement("button");
+            clearBtn.type = "button";
+            clearBtn.className = "timeline-over-clear";
+            clearBtn.textContent = "×";
+            clearBtn.title = "Clear this over";
+            clearBtn.addEventListener("click", (e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              setOverBowler(i, null);
+            });
+            div.appendChild(clearBtn);
+          }
+
+          div.appendChild(strip);
+          div.appendChild(overIndexSpan);
+          if (bowlerName) {
+            div.appendChild(nameSpan);
+          }
+          rowDiv.appendChild(div);
+        }
+
+        bar.appendChild(rowDiv);
+      }
+
+      // Labels + rows: 1–6, 7–15, 16–20
+      renderTimelineRow(0, 5,   "Powerplay (1–6)");
+      renderTimelineRow(6, 14,  "Middle overs (7–15)");
+      renderTimelineRow(15, 19, "Death overs (16–20)");
+
+      // Hypothetical note
+      if (currentOver <= 0) {
+        hypoNote.textContent = "All overs are hypothetical (innings not started).";
+      } else if (currentOver >= TOTAL_OVERS) {
+        hypoNote.textContent = "Innings complete. No hypothetical overs left.";
+      } else {
+        const firstHypoOver = currentOver + 1;
+        hypoNote.textContent = `From over ${firstHypoOver} onwards, assignments are hypothetical/planned.`;
+      }
+    }
+
+    // --- Rendering: Bowler stats table (overs left + draggable tokens) ------
+
+    function renderBowlerStats() {
+      const container = document.getElementById("bowlerStatsContainer");
+      container.innerHTML = "";
+
+      if (state.bowlers.length === 0) {
+        const p = document.createElement("p");
+        p.className = "empty-state";
+        p.textContent = "No bowlers added yet.";
+        container.appendChild(p);
+        return;
+      }
+
+      const stats = computeBowlerStats();
+
+      const table = document.createElement("table");
+      table.className = "bowler-table";
+
+      const thead = document.createElement("thead");
+      thead.innerHTML = `
+        <tr>
+          <th>Bowler</th>
+          <th>Type</th>
+          <th>Overs&nbsp;left</th>
+          <th>Tokens</th>
+          <th></th>
+        </tr>
+      `;
+      table.appendChild(thead);
+
+      const tbody = document.createElement("tbody");
+
+      for (const bowler of state.bowlers) {
+        const row = document.createElement("tr");
+        const st = stats.get(bowler.id) || {
+          oversBowled: 0,
+          oversLeft: MAX_OVERS_PER_BOWLER,
+          isIllegal: false,
+        };
+
+        // Name cell
+        const nameTd = document.createElement("td");
+        nameTd.className = "bowler-name-cell";
+
+        const colorDot = document.createElement("span");
+        colorDot.className = "bowler-color-dot";
+        colorDot.style.background = bowler.color;
+
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = bowler.name;
+
+        nameTd.appendChild(colorDot);
+        nameTd.appendChild(nameSpan);
+
+        // Type cell
+        const typeTd = document.createElement("td");
+        typeTd.textContent = bowler.type || "—";
+
+        // Overs left (numeric)
+        const olTd = document.createElement("td");
+        olTd.textContent = st.oversLeft.toFixed(1).replace(".0", "");
+
+        // Tokens
+        const tokensTd = document.createElement("td");
+        const tokensDiv = document.createElement("div");
+        tokensDiv.className = "bowler-tokens";
+
+        for (let i = 0; i < Math.floor(st.oversLeft); i++) {
+          const token = document.createElement("div");
+          token.className = "bowler-token";
+          token.style.background = bowler.color;
+          token.draggable = true;
+          token.title = "Drag onto a future over card to assign one over";
+          token.addEventListener("dragstart", (e) => {
+            e.dataTransfer.setData("text/plain", bowler.id);
+            e.dataTransfer.effectAllowed = "copy";
+          });
+          tokensDiv.appendChild(token);
+        }
+
+        tokensTd.appendChild(tokensDiv);
+
+        // Illegal flag
+        const flagTd = document.createElement("td");
+        if (st.isIllegal) {
+          const span = document.createElement("span");
+          span.className = "illegal-text";
+          span.textContent = "Over limit!";
+          flagTd.appendChild(span);
+        }
+
+        row.appendChild(nameTd);
+        row.appendChild(typeTd);
+        row.appendChild(olTd);
+        row.appendChild(tokensTd);
+        row.appendChild(flagTd);
+
+        tbody.appendChild(row);
+      }
+
+      table.appendChild(tbody);
+      container.appendChild(table);
+    }
+
+    // --- Rendering: Bowler pills --------------------------------------------
+
+    function renderBowlerPills() {
+      const container = document.getElementById("bowlerPills");
+      const emptyHint = document.getElementById("bowlerEmptyHint");
+      container.innerHTML = "";
+
+      if (state.bowlers.length === 0) {
+        emptyHint.style.display = "block";
+        return;
+      } else {
+        emptyHint.style.display = "none";
+      }
+
+      for (const bowler of state.bowlers) {
+        const pill = document.createElement("div");
+        pill.className = "bowler-pill";
+
+        const dot = document.createElement("span");
+        dot.className = "bowler-color-dot";
+        dot.style.background = bowler.color;
+
+        const nameSpan = document.createElement("span");
+        nameSpan.className = "name";
+        nameSpan.textContent = bowler.name + (bowler.type ? ` (${bowler.type})` : "");
+
+        const removeBtn = document.createElement("button");
+        removeBtn.type = "button";
+        removeBtn.innerHTML = "&times;";
+        removeBtn.title = "Remove bowler and clear their overs";
+        removeBtn.addEventListener("click", () => removeBowler(bowler.id));
+
+        pill.appendChild(dot);
+        pill.appendChild(nameSpan);
+        pill.appendChild(removeBtn);
+        container.appendChild(pill);
+      }
+    }
+
+    // --- Rendering: Batters card --------------------------------------------
+
+    function renderBatters() {
+      const container = document.getElementById("battersTableContainer");
+      const currentDiv = document.getElementById("currentBatters");
+      container.innerHTML = "";
+      currentDiv.innerHTML = "";
+
+      const { batters, currentBatters } = state;
+
+      if (batters.length === 0) {
+        const p = document.createElement("p");
+        p.className = "empty-state";
+        p.textContent = "No batters added yet.";
+        container.appendChild(p);
+        return;
+      }
+
+      // Current pair chips
+      const striker = batters.find(b => b.id === currentBatters.strikerId);
+      const nonStriker = batters.find(b => b.id === currentBatters.nonStrikerId);
+
+      if (striker || nonStriker) {
+        if (striker) {
+          const chip = document.createElement("div");
+          chip.className = "current-batter-chip";
+          const labelSpan = document.createElement("span");
+          labelSpan.className = "current-batter-label";
+          labelSpan.textContent = "Striker";
+          const nameSpan = document.createElement("span");
+          nameSpan.textContent = `${striker.name} (${striker.hand || "?"})`;
+          chip.appendChild(labelSpan);
+          chip.appendChild(nameSpan);
+          currentDiv.appendChild(chip);
+        }
+        if (nonStriker) {
+          const chip = document.createElement("div");
+          chip.className = "current-batter-chip";
+          const labelSpan = document.createElement("span");
+          labelSpan.className = "current-batter-label";
+          labelSpan.textContent = "Non-striker";
+          const nameSpan = document.createElement("span");
+          nameSpan.textContent = `${nonStriker.name} (${nonStriker.hand || "?"})`;
+          chip.appendChild(labelSpan);
+          chip.appendChild(nameSpan);
+          currentDiv.appendChild(chip);
+        }
+      } else {
+        const p = document.createElement("p");
+        p.className = "empty-state";
+        p.textContent = "Select two batters below to mark the current pair.";
+        currentDiv.appendChild(p);
+      }
+
+      // Table of batters
+      const table = document.createElement("table");
+      table.className = "batters-table";
+      const thead = document.createElement("thead");
+      thead.innerHTML = `
+        <tr>
+          <th>Batter</th>
+          <th>Hand</th>
+          <th>Striker</th>
+          <th>Non-striker</th>
+        </tr>
+      `;
+      table.appendChild(thead);
+
+      const tbody = document.createElement("tbody");
+      for (const batter of batters) {
+        const row = document.createElement("tr");
+
+        const nameTd = document.createElement("td");
+        nameTd.className = "batter-name-cell";
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = batter.name;
+        const removeBtn = document.createElement("button");
+        removeBtn.type = "button";
+        removeBtn.className = "batter-remove";
+        removeBtn.innerHTML = "&times;";
+        removeBtn.title = "Remove batter";
+        removeBtn.addEventListener("click", () => removeBatter(batter.id));
+        nameTd.appendChild(nameSpan);
+        nameTd.appendChild(removeBtn);
+
+        const handTd = document.createElement("td");
+        handTd.textContent = batter.hand || "—";
+
+        const strikerTd = document.createElement("td");
+        const strikerRadio = document.createElement("input");
+        strikerRadio.type = "radio";
+        strikerRadio.name = "striker";
+        strikerRadio.checked = currentBatters.strikerId === batter.id;
+        strikerRadio.addEventListener("change", () => setStriker(batter.id));
+        strikerTd.appendChild(strikerRadio);
+
+        const nonStrikerTd = document.createElement("td");
+        const nonStrikerRadio = document.createElement("input");
+        nonStrikerRadio.type = "radio";
+        nonStrikerRadio.name = "nonStriker";
+        nonStrikerRadio.checked = currentBatters.nonStrikerId === batter.id;
+        nonStrikerRadio.addEventListener("change", () => setNonStriker(batter.id));
+        nonStrikerTd.appendChild(nonStrikerRadio);
+
+        row.appendChild(nameTd);
+        row.appendChild(handTd);
+        row.appendChild(strikerTd);
+        row.appendChild(nonStrikerTd);
+
+        tbody.appendChild(row);
+      }
+
+      table.appendChild(tbody);
+      container.appendChild(table);
+    }
+
+    // --- Master render -------------------------------------------------------
+
+    function renderAll() {
+      renderBowlerPills();
+      renderOversRow();
+      renderTimeline();
+      renderBowlerStats();
+      renderBatters();
+    }
+
+    // --- Init ---------------------------------------------------------------
+
+    function init() {
+      // Wire up add bowler
+      const input = document.getElementById("bowlerNameInput");
+      const typeSelect = document.getElementById("bowlerTypeInput");
+      const addBtn = document.getElementById("addBowlerBtn");
+      const currentOverInput = document.getElementById("currentOverInput");
+
+      const downloadCsvBtn = document.getElementById("downloadCsvBtn");
+      downloadCsvBtn.addEventListener("click", downloadTimelineCsv);
+
+      addBtn.addEventListener("click", () => {
+        addBowler(input.value, typeSelect.value);
+        input.value = "";
+        typeSelect.value = "";
+        input.focus();
+      });
+
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          addBowler(input.value, typeSelect.value);
+          input.value = "";
+          typeSelect.value = "";
+        }
+      });
+
+      currentOverInput.addEventListener("input", (e) => {
+        setCurrentOver(e.target.value);
+      });
+
+      // Batting controls
+      const batterNameInput = document.getElementById("batterNameInput");
+      const batterHandInput = document.getElementById("batterHandInput");
+      const addBatterBtn = document.getElementById("addBatterBtn");
+
+      addBatterBtn.addEventListener("click", () => {
+        addBatter(batterNameInput.value, batterHandInput.value);
+        batterNameInput.value = "";
+        batterHandInput.value = "";
+        batterNameInput.focus();
+      });
+
+      batterNameInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          addBatter(batterNameInput.value, batterHandInput.value);
+          batterNameInput.value = "";
+          batterHandInput.value = "";
+        }
+      });
+
+      // Default current over
+      setCurrentOver(currentOverInput.value);
+
+      // Seed a few default bowlers
+      addBowler("Bowler A", "RAP");
+      addBowler("Bowler B", "OS");
+      addBowler("Bowler C", "SLA");
+
+      // Seed a couple of default batters
+      addBatter("Batter 1", "RH");
+      addBatter("Batter 2", "LH");
+
+      renderAll();
+    }
+
+    document.addEventListener("DOMContentLoaded", init);
+  </script>
+</body>
+</html>
